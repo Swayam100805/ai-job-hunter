@@ -1,69 +1,26 @@
 import { useState } from 'react'
+import { Target, Zap, X } from 'lucide-react'
 import PageShell from '../components/PageShell'
 import StreamBox from '../components/StreamBox'
+import { Textarea, PrimaryBtn, GhostBtn, ErrorMsg } from '../components/UI'
 
 const API = import.meta.env.VITE_API_URL
 
-// Parses "MATCH SCORE: 78" patterns out of streamed text
-// Returns array of { title, score, priority } for each job found so far
-function parseJobScores(text) {
-  const results = []
-  const blocks = text.split('---').filter(b => b.trim())
-
-  for (const block of blocks) {
-    const jobMatch      = block.match(/JOB:\s*(.+)/)
-    const scoreMatch    = block.match(/MATCH SCORE:\s*(\d+)/)
-    const priorityMatch = block.match(/PRIORITY:\s*(High|Medium|Low)/i)
-
-    if (jobMatch && scoreMatch) {
-      results.push({
-        title:    jobMatch[1].trim(),
-        score:    parseInt(scoreMatch[1]),
-        priority: priorityMatch ? priorityMatch[1] : null,
-      })
-    }
-  }
-  return results
+function parseMatches(text) {
+  return text.split('---').filter(b => b.trim()).map(block => {
+    const job   = block.match(/JOB:\s*(.+)/)
+    const score = block.match(/MATCH SCORE:\s*(\d+)/)
+    const pri   = block.match(/PRIORITY:\s*(High|Medium|Low)/i)
+    if (!job || !score) return null
+    return { title: job[1].trim(), score: parseInt(score[1]), priority: pri?.[1] }
+  }).filter(Boolean)
 }
 
-const PRIORITY_STYLES = {
-  High:   'bg-green-900/40 text-green-400 border border-green-700',
-  Medium: 'bg-yellow-900/40 text-yellow-400 border border-yellow-700',
-  Low:    'bg-red-900/40 text-red-400 border border-red-700',
+const PRI_STYLE = {
+  High:   'bg-emerald-500/10 text-emerald-400 border-emerald-500/20',
+  Medium: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
+  Low:    'bg-red-500/10 text-red-400 border-red-500/20',
 }
-
-const SCORE_COLOR = (s) =>
-  s >= 80 ? 'text-green-400' : s >= 60 ? 'text-yellow-400' : 'text-red-400'
-
-function MatchCard({ title, score, priority }) {
-  return (
-    <div className="bg-gray-900 border border-gray-700 rounded-xl px-4 py-3 flex items-center justify-between gap-4">
-      <p className="text-sm text-gray-200 font-medium truncate flex-1">{title}</p>
-      <div className="flex items-center gap-3 shrink-0">
-        {priority && (
-          <span className={`text-xs font-semibold px-2 py-1 rounded-md ${PRIORITY_STYLES[priority] || ''}`}>
-            {priority}
-          </span>
-        )}
-        <span className={`text-xl font-bold w-10 text-right ${SCORE_COLOR(score)}`}>
-          {score}
-        </span>
-      </div>
-    </div>
-  )
-}
-
-const EXAMPLE_PROFILE = `Final year ECE student at SPIT Mumbai (2027 grad).
-Projects: ITC Ltd DCF Model (10-year 3-statement, WACC, peer beta), Portfolio Risk Dashboard (VaR, CVaR, Monte Carlo, Streamlit, NSE equities), FinEmo AI (NLP behavioral finance, Top 20 IIT Kanpur ShARE).
-Certifications: CFI Corporate Finance, CFI Accounting Fundamentals, J.P. Morgan Forage simulation.
-Skills: Python, Excel, Financial Modelling, Risk Analytics, SQL.
-Target: Investment Banking / Risk / Fintech roles, Mumbai.`
-
-const EXAMPLE_JOBS = `1. CIB Research & Analytics — J.P. Morgan Mumbai
-2. Global Risk & Compliance Analyst — J.P. Morgan
-3. Investment Banking Analyst — Kotak Mahindra Bank
-4. Risk Analyst — HDFC Bank
-5. Fintech Analyst — Razorpay`
 
 export default function JobMatcher() {
   const [profile, setProfile] = useState('')
@@ -74,149 +31,72 @@ export default function JobMatcher() {
   const [error, setError]     = useState('')
 
   async function handleSubmit() {
-    if (!profile.trim() || !jobs.trim()) {
-      setError('Both profile and jobs are required.')
-      return
-    }
-    setError('')
-    setResult('')
-    setMatches([])
-    setLoading(true)
-
+    if (!profile.trim() || !jobs.trim()) { setError('Both fields required.'); return }
+    setError(''); setResult(''); setMatches([]); setLoading(true)
     try {
-      const response = await fetch(`${API}/api/jobmatcher`, {
+      const res = await fetch(`${API}/api/jobmatcher`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ profile, jobs })
       })
-
-      if (!response.ok) throw new Error('Server error')
-
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let full = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        full += decoder.decode(value)
-        setResult(full)
-
-        // Parse and update match cards live as each job block streams in
-        const parsed = parseJobScores(full)
-        if (parsed.length > 0) setMatches(parsed)
-      }
-    } catch (err) {
-      setError('Something went wrong. Is your backend running?')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  function handleClear() {
-    setProfile('')
-    setJobs('')
-    setResult('')
-    setMatches([])
-    setError('')
-  }
-
-  function loadExample() {
-    setProfile(EXAMPLE_PROFILE)
-    setJobs(EXAMPLE_JOBS)
+      if (!res.ok) throw new Error()
+      const data = await res.json()
+      setResult(data.result)
+      setMatches(parseMatches(data.result))
+    } catch { setError('Request failed. Check your connection.') }
+    finally { setLoading(false) }
   }
 
   return (
     <PageShell
-      icon="🧲"
-      title="Job Matcher"
-      description="Paste your profile and a list of jobs — get match scores, gap analysis, and a ranked apply order."
+      icon={Target}
+      title="Job matcher"
+      badge="Fit scoring · Gap analysis"
+      description="Score your profile against multiple roles simultaneously. Get ranked apply order and gap-bridging actions."
     >
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-        {/* Profile */}
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between">
-            <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-              Your Profile
-            </label>
-            <button
-              onClick={loadExample}
-              className="text-xs text-indigo-400 hover:text-indigo-300 transition-colors"
-            >
-              Load example
-            </button>
-          </div>
-          <textarea
-            value={profile}
-            onChange={e => setProfile(e.target.value)}
-            placeholder={`Summarize your background:\n- Degree, college, grad year\n- Key projects + tech used\n- Certifications\n- Skills\n- Target location / role type`}
-            rows={12}
-            className="bg-gray-900 border border-gray-700 rounded-xl p-4 text-gray-200 text-sm
-                       leading-relaxed resize-none outline-none focus:border-indigo-500 transition-colors"
-          />
-        </div>
-
-        {/* Jobs */}
-        <div className="flex flex-col gap-2">
-          <label className="text-xs font-semibold text-gray-400 uppercase tracking-wide">
-            Jobs to Evaluate
-          </label>
-          <textarea
-            value={jobs}
-            onChange={e => setJobs(e.target.value)}
-            placeholder={`List jobs — one per line:\n1. Role — Company\n2. Role — Company\n\nOr paste full JDs for deeper analysis.`}
-            rows={12}
-            className="bg-gray-900 border border-gray-700 rounded-xl p-4 text-gray-200 text-sm
-                       leading-relaxed resize-none outline-none focus:border-indigo-500 transition-colors"
-          />
-        </div>
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        <Textarea label="Your profile" value={profile} onChange={setProfile}
+          placeholder={"Summarize your background:\n— Degree, college, grad year\n— Projects + tech\n— Certifications\n— Target roles"}
+          rows={12} onFileUpload={setProfile} />
+        <Textarea label="Jobs to evaluate" value={jobs} onChange={setJobs}
+          placeholder={"One per line:\n1. Role — Company\n2. Role — Company\n\nOr paste full JDs for deeper analysis."}
+          rows={12} onFileUpload={setJobs} />
       </div>
 
-      {error && <p className="text-red-400 text-sm mb-3">{error}</p>}
+      <ErrorMsg message={error} />
 
-      {/* Actions */}
-      <div className="flex items-center gap-4 flex-wrap mb-4">
-        <button
-          onClick={handleSubmit}
-          disabled={loading}
-          className="bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed
-                     text-white font-semibold px-6 py-3 rounded-xl transition-colors text-sm"
-        >
-          {loading ? 'Matching…' : '🧲 Match Jobs'}
-        </button>
-
-        {result && (
-          <>
-            <button
-              onClick={() => navigator.clipboard.writeText(result)}
-              className="border border-gray-700 hover:border-gray-500 text-gray-400 hover:text-gray-200
-                         px-4 py-3 rounded-xl transition-colors text-sm"
-            >
-              📋 Copy
-            </button>
-            <button
-              onClick={handleClear}
-              className="text-gray-600 hover:text-gray-400 text-sm transition-colors"
-            >
-              Clear
-            </button>
-          </>
-        )}
+      <div className="flex items-center gap-3 mt-4 flex-wrap">
+        <PrimaryBtn onClick={handleSubmit} disabled={loading} icon={Zap}>
+          {loading ? 'Matching…' : 'Match jobs'}
+        </PrimaryBtn>
+        {result && <GhostBtn icon={X} onClick={() => { setProfile(''); setJobs(''); setResult(''); setMatches([]) }}>Clear</GhostBtn>}
       </div>
 
-      {/* Live match cards — appear as each job streams in */}
+      {/* Live match cards */}
       {matches.length > 0 && (
-        <div className="mb-4">
-          <p className="text-xs font-semibold text-gray-400 uppercase tracking-wide mb-3">
-            Live Match Scores
-          </p>
-          <div className="flex flex-col gap-2">
-            {matches.map((m, i) => (
-              <MatchCard key={i} title={m.title} score={m.score} priority={m.priority} />
-            ))}
-          </div>
+        <div className="mt-5 grid grid-cols-1 gap-2">
+          <p className="text-[10px] font-semibold text-zinc-600 uppercase tracking-widest mb-1">Live match scores</p>
+          {matches.map((m, i) => {
+            const color = m.score >= 80 ? '#34d399' : m.score >= 60 ? '#fbbf24' : '#f87171'
+            return (
+              <div key={i} className="flex items-center gap-4 px-4 py-3 bg-zinc-900/50 border border-zinc-800 rounded-xl">
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm text-zinc-200 font-medium truncate">{m.title}</p>
+                </div>
+                {m.priority && (
+                  <span className={`px-2 py-0.5 rounded-full text-[10px] font-semibold border ${PRI_STYLE[m.priority] || ''}`}>
+                    {m.priority}
+                  </span>
+                )}
+                <div className="flex items-center gap-2 shrink-0">
+                  <div className="w-20 h-1.5 rounded-full bg-zinc-800 overflow-hidden">
+                    <div className="h-full rounded-full" style={{ width: `${m.score}%`, background: color }} />
+                  </div>
+                  <span className="text-sm font-bold w-8 text-right" style={{ color }}>{m.score}</span>
+                </div>
+              </div>
+            )
+          })}
         </div>
       )}
 
