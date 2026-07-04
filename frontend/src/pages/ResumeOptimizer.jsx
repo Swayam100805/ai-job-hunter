@@ -25,49 +25,7 @@ export default function ResumeOptimizer() {
   const [score, setScore]     = useState(null)
   const [error, setError]     = useState('')
 
-  async function handleSubmit() {
-    if (!resume.trim() || !jd.trim()) {
-      setError('Please fill in both fields.')
-      return
-    }
-    setError('')
-    setResult('')
-    setScore(null)
-    setLoading(true)
-
-    try {
-      const response = await fetch(`${API}/api/resume`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ resume, jobDescription: jd })
-      })
-
-      if (!response.ok) throw new Error('Server error')
-
-      // Read the stream chunk by chunk
-      const reader = response.body.getReader()
-      const decoder = new TextDecoder()
-      let full = ''
-
-      while (true) {
-        const { done, value } = await reader.read()
-        if (done) break
-
-        const chunk = decoder.decode(value)
-        full += chunk
-        setResult(full)
-
-        // Try to parse the score as it streams in
-        const match = full.match(/SCORE:\s*(\d+)/)
-        if (match) setScore(parseInt(match[1]))
-      }
-    } catch (err) {
-      setError('Something went wrong. Is your backend running?')
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }
+ Building an AI job hunter application - Claude
 
   function handleClear() {
     setResume('')

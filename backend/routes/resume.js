@@ -11,14 +11,8 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Resume and job description are required' })
   }
 
-  // Tell the browser we're streaming text
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   try {
-    const stream = client.messages.stream({
+    const message = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 1500,
       system: `You are an elite resume optimizer for finance and tech roles.
@@ -51,22 +45,10 @@ Be specific, honest, and actionable. Only use facts from the resume provided.`,
       ]
     })
 
-    // Send each text chunk to the frontend as it arrives
-    stream.on('text', (text) => {
-      res.write(text)
-    })
-
-    stream.on('finalMessage', () => {
-      res.end()
-    })
-
-    stream.on('error', (err) => {
-      console.error('Stream error:', err)
-      res.end()
-    })
+    res.json({ result: message.content[0].text })
 
   } catch (err) {
-    console.error('Route error:', err)
+    console.error(err)
     res.status(500).json({ error: 'Something went wrong' })
   }
 })
