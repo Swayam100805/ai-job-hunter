@@ -1,7 +1,7 @@
 import { Routes, Route, NavLink, useLocation } from 'react-router-dom'
 import { useState } from 'react'
 import {
-  FileText, Linkedin, FolderOpen, Target,
+  FileText,User, FolderOpen, Target,
   PenLine, Mic, ChevronLeft, ChevronRight,
   Zap, Circle
 } from 'lucide-react'
@@ -14,7 +14,7 @@ import InterviewPrep from './pages/InterviewPrep'
 
 const NAV = [
   { path: '/',          label: 'Resume',       sub: 'ATS optimizer',    icon: FileText  },
-  { path: '/linkedin',  label: 'LinkedIn',     sub: 'Profile audit',    icon: Linkedin  },
+  { path: '/linkedin',  label: 'LinkedIn',     sub: 'Profile audit',    icon: User  },
   { path: '/portfolio', label: 'Portfolio',    sub: 'Project coach',    icon: FolderOpen},
   { path: '/jobs',      label: 'Job Match',    sub: 'Fit analysis',     icon: Target    },
   { path: '/cover',     label: 'Cover Letter', sub: 'Auto-generate',    icon: PenLine   },

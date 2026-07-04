@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Linkedin, Search, X } from 'lucide-react'
+import { User, Search, X } from 'lucide-react'
 import PageShell from '../components/PageShell'
 import StreamBox from '../components/StreamBox'
 import { Input, Textarea, PrimaryBtn, GhostBtn, ScoreRing, ErrorMsg } from '../components/UI'
@@ -36,7 +36,7 @@ export default function LinkedInReview() {
 
   return (
     <PageShell
-      icon={Linkedin}
+      icon={User}
       title="LinkedIn profile audit"
       badge="SSI · Recruiter visibility"
       description="Score your headline and About section, get rewrites optimized for recruiter search and algorithmic reach."
