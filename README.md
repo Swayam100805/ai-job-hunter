@@ -177,6 +177,9 @@ ai-job-hunter/
 
 This project is open for learning and personal use.
 
+## Live Demo
+https://ai-job-hunter.vercel.app
+
 ## Author
 
 Built by Swayam Mahindrakar — https://www.linkedin.com/in/swayam-mahindrakar-82539b314/
