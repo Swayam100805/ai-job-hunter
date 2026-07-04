@@ -14,6 +14,7 @@ router.post('/', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
 
   const toneInstructions = {
     professional:  'Formal, precise, and confident. Standard banking tone.',

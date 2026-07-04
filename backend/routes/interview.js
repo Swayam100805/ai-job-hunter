@@ -15,6 +15,7 @@ router.post('/question', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream')
   res.setHeader('Cache-Control', 'no-cache')
   res.setHeader('Connection', 'keep-alive')
+  res.flushHeaders()
 
   const typeInstructions = {
     behavioral:  'A behavioral question using the STAR format. Focus on teamwork, leadership, or handling failure.',
