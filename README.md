@@ -178,7 +178,7 @@ ai-job-hunter/
 This project is open for learning and personal use.
 
 ## Live Demo
-https://ai-job-hunter.vercel.app
+https://ai-job-hunter-phi.vercel.app/
 
 ## Author
 
