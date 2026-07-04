@@ -1,8 +1,8 @@
 import express from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 
 const router = express.Router()
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 router.post('/', async (req, res) => {
   const { headline, about, experience } = req.body
@@ -11,21 +11,19 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Headline and About section are required' })
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1500,
-      system: `You are a LinkedIn profile coach for finance, banking, and fintech professionals.
-Review the profile and return your response in exactly this format:
+      messages: [
+        {
+          role: 'system',
+          content: `You are a LinkedIn profile coach for finance, banking, and fintech professionals.
+Review the profile and return in exactly this format:
 
 HEADLINE SCORE: [number 0-100]
 HEADLINE REWRITE:
-[rewritten headline — punchy, keyword-rich, under 220 characters]
+[rewritten headline under 220 characters]
 
 ABOUT SCORE: [number 0-100]
 ABOUT REWRITE:
@@ -44,10 +42,8 @@ KEYWORDS TO ADD:
 TOP 3 ACTIONS THIS WEEK:
 1. [specific action]
 2. [specific action]
-3. [specific action]
-
-Be direct and specific. Focus on finance and banking recruiter visibility.`,
-      messages: [
+3. [specific action]`
+        },
         {
           role: 'user',
           content: `HEADLINE: ${headline}\n\nABOUT:\n${about}\n\nEXPERIENCE:\n${experience || 'Not provided'}`
@@ -55,9 +51,7 @@ Be direct and specific. Focus on finance and banking recruiter visibility.`,
       ]
     })
 
-    stream.on('text', (text) => res.write(text))
-    stream.on('finalMessage', () => res.end())
-    stream.on('error', () => res.end())
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)

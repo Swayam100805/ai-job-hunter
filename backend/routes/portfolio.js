@@ -1,8 +1,8 @@
 import express from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 
 const router = express.Router()
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 router.post('/', async (req, res) => {
   const { projects, targetRole, techStack } = req.body
@@ -11,33 +11,30 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Projects and target role are required' })
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1500,
-      system: `You are a technical portfolio reviewer for finance, quant, and fintech hiring managers.
-Evaluate the candidate's projects for the target role and return in exactly this format:
+      messages: [
+        {
+          role: 'system',
+          content: `You are a technical portfolio reviewer for finance, quant, and fintech hiring managers.
+Evaluate the candidate's projects and return in exactly this format:
 
 PORTFOLIO SCORE: [number 0-100]
 
 PROJECT NARRATIVES:
-For each project, write a PAR pitch (Problem → Action → Result) the candidate can use in interviews.
 [Project Name]
 - Problem: [what problem did this solve]
 - Action: [what you specifically built/did]
 - Result: [quantified outcome or learning]
 
 STANDOUT FACTOR:
-[What makes this portfolio unique vs other candidates for this role — be specific]
+[What makes this portfolio unique vs other candidates]
 
 GAPS TO FILL:
-- [Missing project type 1 — why it matters for this role]
-- [Missing project type 2 — why it matters for this role]
+- [Missing project type 1 — why it matters]
+- [Missing project type 2 — why it matters]
 
 GITHUB PRESENTATION TIPS:
 - [tip 1]
@@ -45,10 +42,8 @@ GITHUB PRESENTATION TIPS:
 - [tip 3]
 
 INTERVIEW ONE-LINER:
-[A single confident sentence the candidate can open with when asked "tell me about your projects"]
-
-Be technically precise and recruiting-aware. Reward depth over breadth.`,
-      messages: [
+[A single confident sentence to open with when asked about projects]`
+        },
         {
           role: 'user',
           content: `TARGET ROLE: ${targetRole}\nTECH STACK: ${techStack || 'Not specified'}\n\nPROJECTS:\n${projects}`
@@ -56,9 +51,7 @@ Be technically precise and recruiting-aware. Reward depth over breadth.`,
       ]
     })
 
-    stream.on('text', (text) => res.write(text))
-    stream.on('finalMessage', () => res.end())
-    stream.on('error', () => res.end())
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)

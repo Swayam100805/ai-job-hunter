@@ -1,8 +1,8 @@
 import express from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 
 const router = express.Router()
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 router.post('/', async (req, res) => {
   const { profile, jobs } = req.body
@@ -11,44 +11,41 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Profile and jobs are required' })
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 2000,
-      system: `You are a career matching expert for finance, banking, and fintech roles.
-Given a candidate profile and list of jobs, evaluate each one and return in exactly this format:
+      messages: [
+        {
+          role: 'system',
+          content: `You are a career matching expert for finance, banking, and fintech roles.
+For each job evaluate and return in exactly this format:
 
-For each job:
 ---
 JOB: [Job Title — Company]
 MATCH SCORE: [number 0-100]
 PRIORITY: [High / Medium / Low]
 WHY IT FITS:
-- [specific reason 1 tied to candidate's actual experience]
-- [specific reason 2 tied to candidate's actual experience]
+- [specific reason 1]
+- [specific reason 2]
 GAPS:
 - [honest gap 1]
 - [honest gap 2]
-HOW TO BRIDGE: [one concrete action to close the biggest gap]
+HOW TO BRIDGE: [one concrete action]
 ---
 
 After all jobs:
 
 RECOMMENDED APPLY ORDER:
-1. [Job title] — [one sentence why this is #1]
+1. [Job title] — [one sentence why]
 2. [Job title] — [one sentence]
 3. [Job title] — [one sentence]
 
 OVERALL STRATEGY:
-[2-3 sentences on how this candidate should position themselves across these applications]
+[2-3 sentences on positioning across applications]
 
-Be realistic. Do not inflate scores. A 90+ score means near-perfect fit.`,
-      messages: [
+Be realistic. Do not inflate scores.`
+        },
         {
           role: 'user',
           content: `CANDIDATE PROFILE:\n${profile}\n\nJOBS TO EVALUATE:\n${jobs}`
@@ -56,9 +53,7 @@ Be realistic. Do not inflate scores. A 90+ score means near-perfect fit.`,
       ]
     })
 
-    stream.on('text', (text) => res.write(text))
-    stream.on('finalMessage', () => res.end())
-    stream.on('error', () => res.end())
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)

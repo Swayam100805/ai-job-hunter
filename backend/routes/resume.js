@@ -1,8 +1,8 @@
 import express from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 
 const router = express.Router()
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
 router.post('/', async (req, res) => {
   const { resume, jobDescription } = req.body
@@ -12,10 +12,13 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    const message = await client.messages.create({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1500,
-      system: `You are an elite resume optimizer for finance and tech roles.
+      messages: [
+        {
+          role: 'system',
+          content: `You are an elite resume optimizer for finance and tech roles.
 Analyze the resume against the job description and return your response in exactly this format:
 
 SCORE: [number 0-100]
@@ -36,8 +39,8 @@ STRUCTURE FIXES:
 OPTIMIZED SUMMARY:
 [3-sentence professional summary tailored to this role]
 
-Be specific, honest, and actionable. Only use facts from the resume provided.`,
-      messages: [
+Be specific, honest, and actionable. Only use facts from the resume provided.`
+        },
         {
           role: 'user',
           content: `RESUME:\n${resume}\n\nJOB DESCRIPTION:\n${jobDescription}`
@@ -45,7 +48,7 @@ Be specific, honest, and actionable. Only use facts from the resume provided.`,
       ]
     })
 
-    res.json({ result: message.content[0].text })
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)

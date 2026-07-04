@@ -1,10 +1,9 @@
 import express from 'express'
-import Anthropic from '@anthropic-ai/sdk'
+import Groq from 'groq-sdk'
 
 const router = express.Router()
-const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const client = new Groq({ apiKey: process.env.GROQ_API_KEY })
 
-// Route 1 — Generate a question
 router.post('/question', async (req, res) => {
   const { role, company, type } = req.body
 
@@ -12,31 +11,29 @@ router.post('/question', async (req, res) => {
     return res.status(400).json({ error: 'Role is required' })
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-  res.flushHeaders()
-
   const typeInstructions = {
-    behavioral:  'A behavioral question using the STAR format. Focus on teamwork, leadership, or handling failure.',
-    technical:   'A technical question specific to finance or fintech — financial modelling, risk metrics, or data analysis.',
+    behavioral:  'A behavioral question using STAR format. Focus on teamwork, leadership, or handling failure.',
+    technical:   'A technical question specific to finance or fintech — modelling, risk metrics, or data analysis.',
     finance:     'A conceptual finance question — valuation, markets, accounting, or instruments.',
     'case study':'A mini case study: give a business scenario and ask the candidate to walk through their analysis.',
-    hr:          'An HR / fit question about motivation, career goals, or why this firm.',
+    hr:          'An HR/fit question about motivation, career goals, or why this firm.',
   }
 
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 600,
-      system: `You are a senior interviewer at a top investment bank or fintech firm.
-Generate ONE high-quality interview question and return in exactly this format:
+      messages: [
+        {
+          role: 'system',
+          content: `You are a senior interviewer at a top investment bank or fintech firm.
+Generate ONE high-quality interview question in exactly this format:
 
 QUESTION:
-[The full question — be specific to the role and company if provided]
+[The full question]
 
 WHAT THE INTERVIEWER IS TESTING:
-[2-3 sentences on the real intent behind this question]
+[2-3 sentences on the real intent]
 
 TIPS TO ANSWER WELL:
 - [tip 1]
@@ -44,8 +41,8 @@ TIPS TO ANSWER WELL:
 - [tip 3]
 
 COMMON MISTAKE TO AVOID:
-[One specific thing candidates get wrong on this question]`,
-      messages: [
+[One specific thing candidates get wrong]`
+        },
         {
           role: 'user',
           content: `Role: ${role}\nCompany: ${company || 'a top firm'}\nQuestion type: ${typeInstructions[type] || typeInstructions['behavioral']}`
@@ -53,9 +50,7 @@ COMMON MISTAKE TO AVOID:
       ]
     })
 
-    stream.on('text', (text) => res.write(text))
-    stream.on('finalMessage', () => res.end())
-    stream.on('error', () => res.end())
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)
@@ -63,7 +58,6 @@ COMMON MISTAKE TO AVOID:
   }
 })
 
-// Route 2 — Evaluate the candidate's answer
 router.post('/evaluate', async (req, res) => {
   const { question, answer, role } = req.body
 
@@ -71,15 +65,14 @@ router.post('/evaluate', async (req, res) => {
     return res.status(400).json({ error: 'Question and answer are required' })
   }
 
-  res.setHeader('Content-Type', 'text/event-stream')
-  res.setHeader('Cache-Control', 'no-cache')
-  res.setHeader('Connection', 'keep-alive')
-
   try {
-    const stream = client.messages.stream({
-      model: 'claude-sonnet-4-6',
+    const message = await client.chat.completions.create({
+      model: 'llama-3.3-70b-versatile',
       max_tokens: 1000,
-      system: `You are an interview coach evaluating a candidate's answer for a ${role || 'finance'} role.
+      messages: [
+        {
+          role: 'system',
+          content: `You are an interview coach evaluating a candidate's answer for a ${role || 'finance'} role.
 Return in exactly this format:
 
 SCORE: [number 0-100]
@@ -89,17 +82,17 @@ STRENGTHS:
 - [what they did well 2]
 
 IMPROVEMENTS:
-- [specific fix 1 — say exactly what to change]
-- [specific fix 2 — say exactly what to change]
+- [specific fix 1]
+- [specific fix 2]
 
 STRUCTURE CHECK:
-[Did they use STAR / PAR format? What was missing?]
+[Did they use STAR/PAR format? What was missing?]
 
 MODEL ANSWER:
-[A strong sample answer to this exact question — 150-200 words, STAR format]
+[A strong sample answer — 150-200 words, STAR format]
 
-Be honest. A 90+ score means near-perfect delivery.`,
-      messages: [
+Be honest. A 90+ score means near-perfect delivery.`
+        },
         {
           role: 'user',
           content: `QUESTION:\n${question}\n\nCANDIDATE ANSWER:\n${answer}`
@@ -107,9 +100,7 @@ Be honest. A 90+ score means near-perfect delivery.`,
       ]
     })
 
-    stream.on('text', (text) => res.write(text))
-    stream.on('finalMessage', () => res.end())
-    stream.on('error', () => res.end())
+    res.json({ result: message.choices[0].message.content })
 
   } catch (err) {
     console.error(err)
