@@ -1,103 +1,143 @@
-# AI Job Hunter 🚀
+# 🚀 AI Job Hunter
 
-AI Job Hunter is a full-stack web application that helps job seekers improve their chances of landing interviews using AI. It provides personalized feedback on resumes, LinkedIn profiles, portfolios, cover letters, and interview preparation by leveraging Anthropic's Claude models.
+> **AI-powered career copilot for smarter job applications.**
 
-Whether you're applying for internships or full-time roles, the goal is to make the application process faster, smarter, and more effective.
+AI Job Hunter is a full-stack AI application that helps job seekers optimize every stage of the hiring process. Powered by **Groq's ultra-fast LLM inference**, it provides intelligent feedback on resumes, LinkedIn profiles, portfolios, cover letters, and interview preparation.
+
+Whether you're applying for internships, campus placements, or full-time roles, AI Job Hunter helps you create stronger applications and improve your interview readiness with personalized AI insights.
 
 ---
 
 ## ✨ Features
 
-- **Resume Analyzer**
-  - Evaluate ATS compatibility
-  - Identify missing keywords
-  - Improve resume bullet points
+### 📄 Resume Analyzer
+- ATS compatibility analysis
+- Resume scoring
+- Keyword gap detection
+- AI-powered bullet point improvements
+- Actionable recruiter feedback
 
-- **LinkedIn Profile Review**
-  - Analyze profile strength
-  - Improve headline and About section
-  - Get actionable suggestions
+### 💼 LinkedIn Profile Review
+- Headline optimization
+- About section analysis
+- Profile strength evaluation
+- Recruiter visibility suggestions
+- LinkedIn SEO improvements
 
-- **Portfolio Review**
-  - Review project quality
-  - Generate PAR (Problem-Action-Result) interview stories
-  - Identify missing skills and improvements
+### 🌐 Portfolio Review
+- Project quality assessment
+- Technical skill evaluation
+- Missing technologies analysis
+- PAR (Problem-Action-Result) story generation
+- Portfolio improvement recommendations
 
-- **Job Match Analysis**
-  - Compare your profile against job descriptions
-  - Calculate match percentage
-  - Highlight strengths and skill gaps
+### 🎯 Job Match Analyzer
+- Compare resume against job descriptions
+- Match percentage calculation
+- Missing skills detection
+- Strength and weakness analysis
+- Personalized recommendations
 
-- **Cover Letter Generator**
-  - Generate customized cover letters
-  - Multiple writing styles and tones
-  - Tailored to each job posting
+### ✉️ Cover Letter Generator
+- Generate tailored cover letters
+- Company-specific customization
+- Multiple writing styles
+- Professional formatting
 
-- **Interview Preparation**
-  - Generate interview questions
-  - Evaluate answers
-  - Receive model responses and improvement suggestions
+### 🎤 Interview Preparation
+- Technical interview questions
+- Behavioral interview questions
+- AI answer evaluation
+- Sample responses
+- Personalized improvement tips
 
 ---
 
-## 🛠️ Tech Stack
+# 🛠 Tech Stack
 
-### Frontend
+## Frontend
 - React
 - Vite
 - Tailwind CSS
 - React Router
 - Axios
+- Lucide React
 
-### Backend
+## Backend
 - Node.js
 - Express.js
-- Anthropic SDK
+- Multer
+- Groq SDK
 
-### AI Model
-- Claude Sonnet
+## AI
+- Groq API
+- Llama 3.x
 
-### Deployment
+## Deployment
 - Vercel (Frontend)
 - Render (Backend)
 
 ---
 
-## 🚀 Getting Started
+# 🧠 AI Workflow
 
-### Prerequisites
-
-Before running the project, make sure you have:
-
-- Node.js (v18 or above)
-- An Anthropic API key
+```
+User Input
+     │
+     ▼
+React Frontend
+     │
+     ▼
+Express Backend
+     │
+     ▼
+Groq API
+     │
+     ▼
+Llama 3 Model
+     │
+     ▼
+AI Analysis
+     │
+     ▼
+Interactive Results
+```
 
 ---
 
-### Clone the Repository
+# 🚀 Getting Started
+
+## Prerequisites
+
+- Node.js 18+
+- Groq API Key
+
+---
+
+## Clone Repository
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/YOUR_USERNAME/ai-job-hunter.git
 cd ai-job-hunter
 ```
 
 ---
 
-## Backend Setup
+# Backend Setup
 
 ```bash
 cd backend
 npm install
 ```
 
-Create a `.env` file inside the **backend** folder:
+Create a `.env` file inside the backend folder:
 
 ```env
-ANTHROPIC_API_KEY=your_api_key_here
+GROQ_API_KEY=your_api_key_here
 PORT=5000
 ```
 
-Start the backend server:
+Start the backend:
 
 ```bash
 npm run dev
@@ -105,22 +145,20 @@ npm run dev
 
 ---
 
-## Frontend Setup
-
-Open another terminal:
+# Frontend Setup
 
 ```bash
 cd frontend
 npm install
 ```
 
-Create a `.env` file inside the **frontend** folder:
+Create a `.env` file:
 
 ```env
 VITE_API_URL=http://localhost:5000
 ```
 
-Start the frontend:
+Run the frontend:
 
 ```bash
 npm run dev
@@ -128,58 +166,97 @@ npm run dev
 
 ---
 
-## Run the Application
-
-After both servers are running, open:
+# 📂 Project Structure
 
 ```
-http://localhost:5173
-```
-
----
-
-## 📁 Project Structure
-
-```
-ai-job-hunter/
+ai-job-hunter
 │
-├── backend/
-│   ├── routes/
-│   ├── controllers/
+├── backend
+│   ├── controllers
+│   ├── middleware
+│   ├── routes
+│   ├── services
 │   ├── server.js
 │   ├── package.json
 │   └── .env
 │
-├── frontend/
-│   ├── src/
-│   ├── public/
+├── frontend
+│   ├── public
+│   ├── src
+│   │   ├── assets
+│   │   ├── components
+│   │   ├── pages
+│   │   ├── utils
+│   │   ├── App.jsx
+│   │   └── main.jsx
 │   ├── package.json
 │   └── .env
 │
-├── .gitignore
-└── README.md
+├── README.md
+└── .gitignore
 ```
 
 ---
 
-## Future Improvements
+# 🌟 Highlights
 
-- Authentication
-- Job application tracker
-- Resume version management
-- PDF export
-- Support for multiple AI providers
-- User dashboard and analytics
+- ⚡ Powered by Groq's low-latency inference
+- 🤖 AI-driven career assistant
+- 📄 ATS resume optimization
+- 💼 LinkedIn profile analysis
+- 🌐 Portfolio evaluation
+- 🎯 Job description matching
+- ✉️ AI-generated cover letters
+- 🎤 Interview preparation with AI feedback
+- 📱 Fully responsive modern UI
+- ☁️ Cloud deployment using Vercel and Render
 
 ---
 
-## License
+# 📸 Screenshots
 
-This project is open for learning and personal use.
+> Add screenshots or GIFs of:
+>
+> - Home Page
+> - Resume Analyzer
+> - Job Match
+> - LinkedIn Review
+> - Portfolio Review
+> - Interview Preparation
+> - Cover Letter Generator
 
-## Live Demo
+---
+
+# 🔮 Future Improvements
+
+- User Authentication
+- Resume Version Management
+- Job Application Tracker
+- AI Chat Assistant
+- Resume PDF Export
+- Dashboard Analytics
+- Multiple AI Provider Support
+- Saved Analysis History
+
+---
+
+# 🌐 Live Demo
+
+**Frontend**
+
 https://ai-job-hunter-phi.vercel.app/
 
-## Author
+---
 
-Built by Swayam Mahindrakar — https://www.linkedin.com/in/swayam-mahindrakar-82539b314/
+# 👨‍💻 Author
+
+**Swayam Mahindrakar**
+
+- LinkedIn: https://www.linkedin.com/in/swayam-mahindrakar-82539b314/
+- GitHub: https://github.com/Swayam100805
+
+---
+
+## ⭐ Support
+
+If you found this project useful, consider giving it a ⭐ on GitHub!
